@@ -1,7 +1,11 @@
 package br.ufpe.cin.android.podcast
 
+import android.content.Intent
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.ufpe.cin.android.podcast.data.Episodio
@@ -12,37 +16,44 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.log
 
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
+    private lateinit var feeds: ArrayList<Feed>
+    private lateinit var adapter: FeedAdapter
     private lateinit var parser : Parser
     private val scope = CoroutineScope(Dispatchers.Main.immediate)
-    private lateinit var feed : Feed
     private lateinit var episodios: ArrayList<Episodio>
-    private lateinit var adapter: EpisodioAdapter
 
     companion object {
-        val PODCAST_FEED = "https://jovemnerd.com.br/feed-nerdcast/"
+        val PODCAST_FEED_INICIAL = "https://jovemnerd.com.br/feed-nerdcast/"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        episodios = ArrayList<Episodio>()
+        feeds = ArrayList<Feed>()
 
-        val rvEpisodios = binding.listaEpisodios
+        val preference : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val e = preference.edit()
+        e.putString("inicial", PODCAST_FEED_INICIAL)
+        e.apply()
+        binding.addFeeds.setOnClickListener {
+            startActivity(Intent(this, PreferenciasActivity::class.java))
+        }
 
-        rvEpisodios.layoutManager = LinearLayoutManager(this)
+        val rvFeeds = binding.rvFeeds
 
-        rvEpisodios.addItemDecoration(
+        rvFeeds.layoutManager = LinearLayoutManager(this)
+
+        rvFeeds.addItemDecoration(
             DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         )
-        adapter = EpisodioAdapter(episodios, layoutInflater)
+        adapter = FeedAdapter(feeds, layoutInflater)
 
-        rvEpisodios.adapter = adapter
+        rvFeeds.adapter = adapter
 
         parser = Parser.Builder()
             .context(this)
@@ -52,11 +63,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        val preference : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val pod_inicial = preference.getString("inicial", PODCAST_FEED_INICIAL)
         scope.launch {
             val channel = withContext(Dispatchers.IO) {
-                parser.getChannel(PODCAST_FEED)
+                parser.getChannel(pod_inicial.toString())
             }
-
+            episodios = ArrayList<Episodio>()
             channel.articles.forEach { c ->
                 var ep = Episodio(
                     c.link.toString(),
@@ -67,19 +80,15 @@ class MainActivity : AppCompatActivity() {
                 )
                 episodios.add(ep)
             }
+
+            var feed = Feed(
+                channel.link.toString(), channel.title.toString(), channel.description.toString(), channel.link.toString(),
+                channel.image?.link.toString(), 10, 10, episodios
+            )
+
+            feeds.add(feed)
+
             adapter.notifyDataSetChanged()
-
-//            feed = Feed(
-//                channel.link.toString(),
-//                channel.title.toString(),
-//                channel.description.toString(),
-//                channel.link.toString(),
-//                channel.image.url.toString(),
-//                10,
-//                10,
-//                episodios
-//            )
         }
-
     }
 }
