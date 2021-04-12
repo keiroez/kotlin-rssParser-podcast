@@ -1,4 +1,4 @@
-package br.ufpe.cin.android.podcast.data
+package br.ufpe.cin.android.podcast.data.vo
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -10,7 +10,8 @@ data class Episodio(
     val titulo: String,
     val descricao: String,
     val linkArquivo: String,
-    val dataPublicacao: String
+    val dataPublicacao: String,
+    val urlFeed: String
 ) {
     override fun toString(): String {
         return "$titulo ($dataPublicacao) => $descricao"
