@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="Adicionar RSS Feed">
+        <EditTextPreference
+            android:key="@string/rss_feed"
+            android:title="RSS Feed"
+            android:dialogTitle="Inserir Podcast"
+            android:dialogMessage="Insira a URL de RSS Feed do seu Podcast"
+            android:positiveButtonText="Salvar"
+            android:negativeButtonText="Cancelar"
+            />
+    </PreferenceCategory>
+</PreferenceScreen>

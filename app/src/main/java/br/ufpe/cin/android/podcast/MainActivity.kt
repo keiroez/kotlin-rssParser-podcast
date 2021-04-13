@@ -1,13 +1,18 @@
 package br.ufpe.cin.android.podcast
 
+import android.content.Intent
 import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
-import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import br.ufpe.cin.android.podcast.adapters.FeedAdapter
 import br.ufpe.cin.android.podcast.data.FeedDB
 import br.ufpe.cin.android.podcast.data.vo.Episodio
@@ -25,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
     private lateinit var feedAdapter: FeedAdapter
@@ -34,12 +40,15 @@ class MainActivity : AppCompatActivity() {
     private val feedViewModel : FeedViewModel by viewModels(){
         FeedViewModelFactory(
             FeedRepository(
-                FeedDB.getInstance(this).feedDao()))
+                FeedDB.getInstance(this).feedDao()
+            )
+        )
     }
     private val episodioViewModel : EpisodioViewModel by viewModels(){
         EpisodioViewModelFactory(
             EpisodioRepository(
-                FeedDB.getInstance(this).episodioDao())
+                FeedDB.getInstance(this).episodioDao()
+            )
         )
     }
 
@@ -52,19 +61,18 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val preference : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val e = preference.edit()
-        e.putString("rssfeed", PODCAST_FEED_INICIAL)
-        e.apply()
+//        val preference : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+//        val e = preference.edit()
+//        if(preference.getString("rssfeed","")=="") {
+//            e.putString("rssfeed", PODCAST_FEED_INICIAL)
+//            e.apply()
+//        }
 
         binding.addFeeds.setOnClickListener {
-//            startActivity(Intent(this, PreferenciasActivity::class.java))
+            startActivity(Intent(this, PreferenciasActivity::class.java))
         }
 
         val rvFeeds = binding.rvFeeds
-        rvFeeds.addItemDecoration(
-            DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        )
         feedAdapter = FeedAdapter(layoutInflater)
         rvFeeds.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -77,6 +85,32 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        //Remove feed arrastando o card pro lado
+        //https://stackoverflow.com/questions/49827752/how-to-implement-drag-and-drop-and-swipe-to-delete-in-recyclerview/59015928
+        val mIth = ItemTouchHelper(
+            object : ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT
+            ) {
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: ViewHolder, target: ViewHolder
+                ): Boolean {
+                    return true // true if moved, false otherwise
+                }
+                override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
+                    scope.launch(Dispatchers.IO) {
+                        feedViewModel.remover(feedAdapter.currentList.get(viewHolder.adapterPosition))
+                    }
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Feed removido!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
+        mIth.attachToRecyclerView(rvFeeds)
+
         parser = Parser.Builder()
             .context(this)
             .cacheExpirationMillis(24L * 60L * 60L * 100L)
@@ -85,37 +119,35 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        val preference : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val pod_inicial = preference.getString("inicial", PODCAST_FEED_INICIAL)
-        scope.launch {
-            val channel = withContext(Dispatchers.IO) {
-                parser.getChannel(pod_inicial.toString())
-            }
-            episodios = ArrayList<Episodio>()
-            channel.articles.forEach { c ->
-                var ep = Episodio(
-                    c.link.toString(),
-                    c.title.toString(),
-                    c.description.toString(),
-                    c.sourceUrl.toString(),
-                    c.pubDate.toString(),
-                    channel.link.toString()
+        val preference: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val pod_inicial = preference.getString("rssfeed", PODCAST_FEED_INICIAL)
+        if (pod_inicial != "") {
+            scope.launch {
+                val channel = withContext(Dispatchers.IO) {
+                    parser.getChannel(pod_inicial.toString())
+                }
+                episodios = ArrayList<Episodio>()
+                channel.articles.forEach { c ->
+                    var ep = Episodio(
+                        c.link.toString(),
+                        c.title.toString(),
+                        c.description.toString(),
+                        c.sourceUrl.toString(),
+                        c.pubDate.toString(),
+                        pod_inicial.toString()
+                    )
+                    episodioViewModel.inserir(ep)
+                }
+                var feed = Feed(
+                    pod_inicial.toString(),
+                    channel.title.toString(),
+                    channel.description.toString(),
+                    channel.link.toString(),
+                    channel.image?.link.toString(), 10, 10
                 )
-//                episodios.add(ep)
-                episodioViewModel.inserir(ep)
+                feedViewModel.inserir(feed)
+                preference.edit().clear().apply()
             }
-
-            var feed = Feed(
-                PODCAST_FEED_INICIAL,
-                channel.title.toString(),
-                channel.description.toString(),
-                channel.link.toString(),
-                channel.image?.link.toString(), 10, 10
-            )
-            feedViewModel.inserir(feed)
-
-//            feeds.add(feed)
-//            feedAdapter.notifyDataSetChanged()
         }
     }
 }

@@ -40,9 +40,6 @@ class FeedActivity() : AppCompatActivity() {
         setContentView(binding.root)
 
         val rvEpisodios = binding.listaEpisodios
-        rvEpisodios.addItemDecoration(
-            DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        )
         episodioAdapter = EpisodioAdapter(layoutInflater)
 
         rvEpisodios.apply {

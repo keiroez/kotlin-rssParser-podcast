@@ -11,6 +11,7 @@ class FeedViewHolder(private val binding: ItemfeedBinding) :
     RecyclerView.ViewHolder(binding.root) {
     fun bintTo(feed: Feed) {
         binding.itemTitle.text = feed.titulo
+        binding.itemDescricao.text = feed.descricao
 
         //Envia a urlFeed pela Intent
         binding.card.setOnClickListener {
@@ -18,11 +19,6 @@ class FeedViewHolder(private val binding: ItemfeedBinding) :
             it.putExtra("url", feed.urlFeed)
             binding.root.context.startActivity(it)
         }
-        //
-        binding.itemAction.setOnClickListener {
-            var it = Intent(binding.root.context, PreferenciasActivity::class.java)
-            it.putExtra("url", feed.urlFeed)
-            binding.root.context.startActivity(it)
-        }
+
     }
 }
