@@ -9,7 +9,8 @@ data class Episodio(
     val linkEpisodio: String,
     val titulo: String,
     val descricao: String,
-    val linkArquivo: String,
+    var linkArquivo: String,
+    val linkDownload: String,
     val dataPublicacao: String,
     val urlFeed: String
 ) {

@@ -132,7 +132,8 @@ class MainActivity : AppCompatActivity() {
                         c.link.toString(),
                         c.title.toString(),
                         c.description.toString(),
-                        c.sourceUrl.toString(),
+                        "",
+                        c.audio.toString(),
                         c.pubDate.toString(),
                         pod_inicial.toString()
                     )

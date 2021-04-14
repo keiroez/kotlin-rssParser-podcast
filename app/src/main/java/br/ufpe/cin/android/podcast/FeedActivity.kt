@@ -1,29 +1,23 @@
 package br.ufpe.cin.android.podcast
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.media.MediaPlayer
 import android.os.Bundle
-import android.util.Log
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.ufpe.cin.android.podcast.adapters.EpisodioAdapter
 import br.ufpe.cin.android.podcast.data.FeedDB
-import br.ufpe.cin.android.podcast.data.vo.Episodio
-import br.ufpe.cin.android.podcast.data.vo.Feed
 import br.ufpe.cin.android.podcast.databinding.ActivityFeedBinding
 import br.ufpe.cin.android.podcast.repository.EpisodioRepository
-import br.ufpe.cin.android.podcast.repository.FeedRepository
+import br.ufpe.cin.android.podcast.services.DownloadService
 import br.ufpe.cin.android.podcast.viewModel.EpisodioViewModel
 import br.ufpe.cin.android.podcast.viewModel.EpisodioViewModelFactory
-import br.ufpe.cin.android.podcast.viewModel.FeedViewModel
-import br.ufpe.cin.android.podcast.viewModel.FeedViewModelFactory
-import com.prof.rssparser.Parser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class FeedActivity() : AppCompatActivity() {
     private lateinit var binding : ActivityFeedBinding
@@ -47,6 +41,7 @@ class FeedActivity() : AppCompatActivity() {
             adapter = episodioAdapter
         }
 
+
         var linkUrl = intent.getStringExtra("url")
 
         episodioViewModel.getEpisodiosPorFeed(linkUrl.toString()).observe(
@@ -58,7 +53,21 @@ class FeedActivity() : AppCompatActivity() {
 
     }
 
-    override fun onStart() {
-        super.onStart()
+//    AGUARDA O RETORNO DO DOWNLOAD COMPLETO
+    private val onDownloadComplete = object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Toast.makeText(binding.root.context, "Download finalizado.", Toast.LENGTH_SHORT).show()
+            episodioAdapter.notifyDataSetChanged()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(onDownloadComplete, IntentFilter(DownloadService.DOWNLOAD_COMPLETE))
+    }
+
+    override fun onPause() {
+        unregisterReceiver(onDownloadComplete)
+        super.onPause()
     }
 }

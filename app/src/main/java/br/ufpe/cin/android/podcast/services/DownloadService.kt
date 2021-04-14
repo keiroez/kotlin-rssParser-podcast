@@ -18,6 +18,7 @@ class DownloadService : JobIntentService() {
 
     companion object {
         private val JOB_ID = 1234
+        val DOWNLOAD_COMPLETE = "br.ufpe.android.podcast.DOWNLOAD_COMPLETE"
 
         fun enqueueWork(context: Context, intent: Intent){
             enqueueWork(context, DownloadService::class.java, JOB_ID, intent)
@@ -56,13 +57,8 @@ class DownloadService : JobIntentService() {
                 c.disconnect()
             }
 
-            //se chegou aqui, deu tudo certo
-//            sendBroadcast(Intent(DOWNLOAD_COMPLETE))
-//            Toast.makeText(
-//                this,
-//                "Download efetuado!",
-//                Toast.LENGTH_SHORT
-//            ).show()
+//           se chegou aqui, deu tudo certo
+            sendBroadcast(Intent(DOWNLOAD_COMPLETE))
 
         } catch (e: IOException) {
             Log.e(javaClass.name, "Exception durante download", e)
