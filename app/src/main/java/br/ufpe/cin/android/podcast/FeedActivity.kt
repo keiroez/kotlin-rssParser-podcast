@@ -66,10 +66,6 @@ class FeedActivity() : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onResume() {
         super.onResume()
         registerReceiver(onDownloadComplete, IntentFilter(DownloadService.DOWNLOAD_COMPLETE))

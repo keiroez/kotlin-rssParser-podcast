@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.icu.util.ULocale
 import android.net.Uri
 import android.os.Environment
 import android.os.IBinder
@@ -22,6 +23,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 class EpisodioViewHolder(
     private val binding: ItemepisodioBinding,
@@ -37,9 +41,11 @@ class EpisodioViewHolder(
     )
     private var isBound = false
     internal var TAG = "MusicPLayerBindig"
+
     companion object {
         private var musicPlayerService: MusicPlayerBindingService? = null
     }
+
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             isBound = true
@@ -63,7 +69,15 @@ class EpisodioViewHolder(
 
     fun bintTo(episodio: Episodio) {
         binding.itemTitleEp.text = episodio.titulo
-        binding.itemDateEp.text = episodio.dataPublicacao
+
+        //Formatação de data
+        val cal: Calendar = Calendar.getInstance()
+        cal.time = Date(episodio.dataPublicacao)
+        val formato = "dd/MM/yyyy"
+        val format = SimpleDateFormat(formato)
+        val dataFormatada = format.format(cal.time)
+        binding.itemDateEp.text = dataFormatada
+        binding.txtEpDesc.text = episodio.descricao
 
         binding.cardEp.setOnClickListener {
             val i = Intent(binding.root.context, EpisodeDetailActivity::class.java)
@@ -106,12 +120,12 @@ class EpisodioViewHolder(
 
                     //CONTROLAR SE O EPISÓDIO ESTÁ SENDO EXECUTADO
                     musicPlayerService?.let { Log.i("AUDIO_SERVICE", it.getAudio()) }
-                        Log.i("AUDIO",episodio.linkArquivo)
+                    Log.i("AUDIO", episodio.linkArquivo)
 
                     //Verifica se o episódio já esta tocando e insere o botao de pause
-                    if(musicPlayerService?.getAudio()==episodio.linkArquivo && musicPlayerService?.isPlaying() == true)
+                    if (musicPlayerService?.getAudio() == episodio.linkArquivo && musicPlayerService?.isPlaying() == true)
                         binding.btActionEp.setImageResource(R.drawable.ic_baseline_pause_24)
-                    else{
+                    else {
                         //Caso não esteja tocando, o botão será o play
                         binding.btActionEp.setImageResource(R.drawable.ic_baseline_play_arrow_24)
                     }
@@ -120,15 +134,15 @@ class EpisodioViewHolder(
                     //BOTÃO COM LISTENER MODIFICADO PARA PLAY
                     binding.btActionEp.setOnClickListener {
                         //Se não tiver tocando dá o play enviando o caminho do arquivo
-                        if (musicPlayerService?.isPlaying()==false) {
+                        if (musicPlayerService?.isPlaying() == false) {
                             musicPlayerService?.setAudio(episodio.linkArquivo)
-                            musicPlayerService?.playMusic(episodio.currentPosition)
+                            musicPlayerService?.playMusic(episodio.currentPosition, episodio.linkEpisodio)
                             binding.btActionEp.setImageResource(R.drawable.ic_baseline_pause_24)
-                        //Caso esteja tocando, pausa a execução
+                            //Caso esteja tocando, pausa a execução
                         } else {
                             binding.btActionEp.setImageResource(R.drawable.ic_baseline_play_arrow_24)
                             var currentPosition = musicPlayerService?.pauseMusic()
-                            if (currentPosition != null && currentPosition>0) {
+                            if (currentPosition != null && currentPosition > 0) {
                                 //Armazena posição atual quando há uma pausa
                                 episodio.currentPosition = currentPosition
                                 scope.launch(Dispatchers.IO) {

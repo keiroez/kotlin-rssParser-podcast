@@ -10,7 +10,7 @@ import br.ufpe.cin.android.podcast.data.vo.Episodio
 import br.ufpe.cin.android.podcast.data.vo.Feed
 
 //[ITEM 5] - UTILIZAÇÃO DE SQLITE POR MEIO DO ROOM PARA ARMAZENAMENTO DE DADOS
-@Database(entities = [Feed::class, Episodio::class],version = 1)
+@Database(entities = [Feed::class, Episodio::class],version = 2)
  abstract class FeedDB : RoomDatabase() {
      abstract fun feedDao(): FeedDAO
      abstract fun episodioDao(): EpisodioDAO

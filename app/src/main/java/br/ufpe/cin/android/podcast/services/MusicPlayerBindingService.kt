@@ -1,9 +1,6 @@
 package br.ufpe.cin.android.podcast.services
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Binder
@@ -12,6 +9,7 @@ import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import br.ufpe.cin.android.podcast.EpisodeDetailActivity
 import br.ufpe.cin.android.services.CHANNEL_ID
 import br.ufpe.cin.android.services.NOTIFICATION_ID
 import br.ufpe.cin.android.services.VERBOSE_NOTIFICATION_CHANNEL_DESCRIPTION
@@ -22,6 +20,7 @@ class MusicPlayerBindingService : Service() {
     private lateinit var mPlayer: MediaPlayer
     private var numStart = 0
     private var audio: String = ""
+    private var urlEpisodio: String = ""
 
     override fun onCreate() {
         super.onCreate()
@@ -31,17 +30,17 @@ class MusicPlayerBindingService : Service() {
 //        mPlayer.isLooping = true
         mPlayer = MediaPlayer();
         createChannel()
-//        val intent = Intent(this,AnotherBindingActivity::class.java)
+        val intent = Intent(this,EpisodeDetailActivity::class.java)
+        intent.putExtra("urlEpisodio", urlEpisodio)
         //como se fosse o startActivity(intent) pra ser executado mais tarde (ao clicar na notificacao)
-//        val pendingIntent = PendingIntent.getActivity(this,0,intent,0)
-
+        val pendingIntent = PendingIntent.getActivity(this,0,intent,0)
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
-            .setContentTitle("Music Service rodando!")
+            .setContentTitle("Podcast tocando!")
             .setContentText("clique para acessar o player")
-//            .setContentIntent(pendingIntent)
+            .setContentIntent(pendingIntent)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
@@ -89,11 +88,12 @@ class MusicPlayerBindingService : Service() {
         return mPlayer.isPlaying
     }
 
-    fun playMusic(current :Int) {
+    fun playMusic(current :Int, urlEp: String) {
         if (!mPlayer.isPlaying) {
             //Seta posição atual se for maior que 0
             setCurrent(current)
             mPlayer.start()
+            urlEpisodio = urlEp
         }
     }
 

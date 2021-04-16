@@ -110,7 +110,8 @@ class DownloadService : JobIntentService() {
                                 //URL DO FEED UTILIZADO COMO CHAVE ESTRANGEIRA PARA CONSULTAS
                                 //POR FEED
                                 url.toString(),
-                                0
+                                0,
+                                c.image.toString()
                             )
                             //INSERINDO OS EPISODIOS NO BANCO
                             epRepo.inserir(ep)
@@ -121,7 +122,7 @@ class DownloadService : JobIntentService() {
                             channel.title.toString(),
                             channel.description.toString(),
                             channel.link.toString(),
-                            channel.image?.link.toString(), 10, 10
+                            channel.image?.url.toString(), 10, 10
                         )
                         //ADICIONANDO FEED NO BANCO
                         feedRepo.inserir(feed)
