@@ -7,8 +7,10 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Environment
 import android.os.IBinder
+import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import br.ufpe.cin.android.podcast.EpisodeDetailActivity
 import br.ufpe.cin.android.podcast.R
 import br.ufpe.cin.android.podcast.data.FeedDB
 import br.ufpe.cin.android.podcast.data.vo.Episodio
@@ -23,7 +25,8 @@ import java.io.File
 
 class EpisodioViewHolder(
     private val binding: ItemepisodioBinding,
-    private val adapter: EpisodioAdapter
+    private val adapter: EpisodioAdapter,
+    private val serviceIntent: Intent
 ) :
     RecyclerView.ViewHolder(binding.root) {
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -34,7 +37,9 @@ class EpisodioViewHolder(
     )
     private var isBound = false
     internal var TAG = "MusicPLayerBindig"
-    private var musicPlayerService: MusicPlayerBindingService? = null
+    companion object {
+        private var musicPlayerService: MusicPlayerBindingService? = null
+    }
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             isBound = true
@@ -47,15 +52,24 @@ class EpisodioViewHolder(
             musicPlayerService = null
         }
     }
-    private var serviceOn = false
-    private val serviceIntent =
-        Intent(binding.root.context, MusicPlayerBindingService::class.java)
 
+    init {
+        binding.root.context.bindService(
+            serviceIntent,
+            serviceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+    }
 
     fun bintTo(episodio: Episodio) {
         binding.itemTitleEp.text = episodio.titulo
         binding.itemDateEp.text = episodio.dataPublicacao
 
+        binding.cardEp.setOnClickListener {
+            val i = Intent(binding.root.context, EpisodeDetailActivity::class.java)
+            i.putExtra("urlEpisodio", episodio.linkEpisodio)
+            binding.root.context.startActivity(i)
+        }
 
         //[ITEM 8] - AO CLICAR NO BOTÃO DE DOWNLOAD É INICIADO O SERVIÇO PARA BAIXAR
         //           O ÁUDIO DO EPISÓDIO
@@ -84,50 +98,55 @@ class EpisodioViewHolder(
                 val root =
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val audioFile = File(root, episodio.linkArquivo)
+
+                //Verifica se o arquivo existe
                 if (audioFile.exists()) {
+
                     //[ITEM 9] - ICONE DE PLAY ADICIONADO AO BOTÃO
-                    binding.btActionEp.setImageResource(R.drawable.ic_baseline_play_arrow_24)
-                    //VARIÁVEL PARA CONTROLAR SE O EPISÓDIO ESTÁ SENDO EXECUTADO
-                    var play = false
+
+                    //CONTROLAR SE O EPISÓDIO ESTÁ SENDO EXECUTADO
+                    musicPlayerService?.let { Log.i("AUDIO_SERVICE", it.getAudio()) }
+                        Log.i("AUDIO",episodio.linkArquivo)
+
+                    //Verifica se o episódio já esta tocando e insere o botao de pause
+                    if(musicPlayerService?.getAudio()==episodio.linkArquivo && musicPlayerService?.isPlaying() == true)
+                        binding.btActionEp.setImageResource(R.drawable.ic_baseline_pause_24)
+                    else{
+                        //Caso não esteja tocando, o botão será o play
+                        binding.btActionEp.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+                    }
                     //BOTÃO DE PLAY DESBLOQUEADO
                     binding.btActionEp.isEnabled = true
                     //BOTÃO COM LISTENER MODIFICADO PARA PLAY
                     binding.btActionEp.setOnClickListener {
-                        serviceIntent.putExtra("audio", episodio.linkArquivo)
-                        if (!isBound) {
-                            binding.root.context.bindService(
-                                serviceIntent,
-                                serviceConnection,
-                                Context.BIND_AUTO_CREATE
-                            )
-                        }
-                        if (!play) {
-                            if(!serviceOn) {
-                                binding.root.context.startService(serviceIntent)
-                                serviceOn = true
-                            }
+                        //Se não tiver tocando dá o play enviando o caminho do arquivo
+                        if (musicPlayerService?.isPlaying()==false) {
+                            musicPlayerService?.setAudio(episodio.linkArquivo)
+                            musicPlayerService?.playMusic(episodio.currentPosition)
                             binding.btActionEp.setImageResource(R.drawable.ic_baseline_pause_24)
-                            if (isBound) {
-                                musicPlayerService?.playMusic()
-                            }
-                            play = true
+                        //Caso esteja tocando, pausa a execução
                         } else {
                             binding.btActionEp.setImageResource(R.drawable.ic_baseline_play_arrow_24)
-                            if (isBound) {
-                                musicPlayerService?.pauseMusic()
+                            var currentPosition = musicPlayerService?.pauseMusic()
+                            if (currentPosition != null && currentPosition>0) {
+                                //Armazena posição atual quando há uma pausa
+                                episodio.currentPosition = currentPosition
+                                scope.launch(Dispatchers.IO) {
+                                    repo.atualizar(episodio)
+                                }
                             }
-                            play = false
+                            //Notifica adaoter sobre a mudança
                             adapter.notifyDataSetChanged()
                         }
                     }
                 } else {
+                    //CASO O ARQUIVO NÃO EXISTA MAIS, É MOSTRADO UMA MENSAGEM INFORMANDO
+                    //E O CAMINHO DO ARQUIVO NO BD É ATUALIZADO
                     Toast.makeText(
                         binding.root.context,
                         "Arquivo nao existe",
                         Toast.LENGTH_SHORT
                     ).show()
-                    //CASO O ARQUIVO NÃO EXISTA MAIS, É MOSTRADO UMA MENSAGEM INFORMANDO
-                    //E O CAMINHO DO ARQUIVO NO BD É ATUALIZADO
                     episodio.linkArquivo = ""
                     scope.launch(Dispatchers.IO) {
                         repo.atualizar(episodio)

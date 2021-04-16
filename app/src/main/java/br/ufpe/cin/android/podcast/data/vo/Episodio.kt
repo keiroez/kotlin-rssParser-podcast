@@ -12,7 +12,8 @@ data class Episodio(
     var linkArquivo: String,
     val linkDownload: String,
     val dataPublicacao: String,
-    val urlFeed: String
+    val urlFeed: String,
+    var currentPosition: Int
 ) {
     override fun toString(): String {
         return "$titulo ($dataPublicacao) => $descricao"

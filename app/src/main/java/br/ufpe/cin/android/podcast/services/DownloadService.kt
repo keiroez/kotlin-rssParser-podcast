@@ -109,7 +109,8 @@ class DownloadService : JobIntentService() {
                                 c.pubDate.toString(),
                                 //URL DO FEED UTILIZADO COMO CHAVE ESTRANGEIRA PARA CONSULTAS
                                 //POR FEED
-                                url.toString()
+                                url.toString(),
+                                0
                             )
                             //INSERINDO OS EPISODIOS NO BANCO
                             epRepo.inserir(ep)

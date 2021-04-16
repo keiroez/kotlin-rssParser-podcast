@@ -18,10 +18,10 @@ import br.ufpe.cin.android.services.VERBOSE_NOTIFICATION_CHANNEL_DESCRIPTION
 import br.ufpe.cin.android.services.VERBOSE_NOTIFICATION_CHANNEL_NAME
 import java.io.FileInputStream
 
-class MusicPlayerBindingService: Service() {
-    private lateinit var mPlayer : MediaPlayer
+class MusicPlayerBindingService : Service() {
+    private lateinit var mPlayer: MediaPlayer
     private var numStart = 0
-    private lateinit var filePath : FileInputStream
+    private var audio: String = ""
 
     override fun onCreate() {
         super.onCreate()
@@ -30,15 +30,13 @@ class MusicPlayerBindingService: Service() {
         //A música não vai ficar tocando em loop
 //        mPlayer.isLooping = true
         mPlayer = MediaPlayer();
-
         createChannel()
-
 //        val intent = Intent(this,AnotherBindingActivity::class.java)
         //como se fosse o startActivity(intent) pra ser executado mais tarde (ao clicar na notificacao)
 //        val pendingIntent = PendingIntent.getActivity(this,0,intent,0)
 
 
-        val notification : Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .setContentTitle("Music Service rodando!")
@@ -46,7 +44,7 @@ class MusicPlayerBindingService: Service() {
 //            .setContentIntent(pendingIntent)
             .build()
 
-        startForeground(NOTIFICATION_ID,notification)
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     override fun onDestroy() {
@@ -56,14 +54,6 @@ class MusicPlayerBindingService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        var audio = intent?.getStringExtra("audio").toString()
-        filePath = FileInputStream(Environment.getExternalStoragePublicDirectory(
-            Environment.DIRECTORY_DOWNLOADS).path+"/"+audio)
-        Log.d("MusicPlayerService", "teste")
-        mPlayer.setDataSource(filePath.fd);
-        mPlayer.prepare();
-        mPlayer.start()
-
         //Sinaliza o que fazer caso o service seja interrompido pelo sistema
         //START_NOT_STICKY - não é reiniciado automaticamente
         //START_STICKY - vai ser reiniciado automaticamente assim que possível, com intent nulo
@@ -71,16 +61,53 @@ class MusicPlayerBindingService: Service() {
         return START_NOT_STICKY
     }
 
-    fun playMusic() {
+    //Seta o caminho do audio
+    fun setAudio(audioEnv: String) {
+        //verifica se é um novo audio ou o mesmo que já está em execução
+        if (audio != audioEnv) {
+            //Se já estiver tocando, ele para a execução e recria o mediaPlayer
+            if (mPlayer.isPlaying)
+                mPlayer.stop()
+            mPlayer = MediaPlayer()
+            audio = audioEnv
+            var filePath = FileInputStream(
+                Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS
+                ).path + "/" + audio
+            )
+            Log.d("MusicPlayerService", filePath.toString())
+            mPlayer.setDataSource(filePath.fd);
+            mPlayer.prepare();
+        }
+    }
+
+    fun getAudio() :String{
+        return audio
+    }
+
+    fun isPlaying(): Boolean{
+        return mPlayer.isPlaying
+    }
+
+    fun playMusic(current :Int) {
         if (!mPlayer.isPlaying) {
+            //Seta posição atual se for maior que 0
+            setCurrent(current)
             mPlayer.start()
         }
     }
 
-    fun pauseMusic() {
+    fun setCurrent(current: Int){
+        if(current>0) {
+            mPlayer.seekTo(current)
+        }
+    }
+
+    fun pauseMusic(): Int {
         if (mPlayer.isPlaying) {
             mPlayer.pause()
         }
+        return mPlayer.currentPosition
     }
 
     fun rewind() {
@@ -93,9 +120,10 @@ class MusicPlayerBindingService: Service() {
         return musicBinder
     }
 
-    private val musicBinder : IBinder = MusicBinder()
+    private val musicBinder: IBinder = MusicBinder()
+
     inner class MusicBinder : Binder() {
-        val service : MusicPlayerBindingService
+        val service: MusicPlayerBindingService
             get() = this@MusicPlayerBindingService
     }
 

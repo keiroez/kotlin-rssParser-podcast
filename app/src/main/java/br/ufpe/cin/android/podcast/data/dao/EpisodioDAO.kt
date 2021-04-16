@@ -29,4 +29,7 @@ interface EpisodioDAO {
     @Query("DELETE FROM episodios WHERE urlFeed = :arg")
     suspend fun removeByFeed(arg: String)
 
+    @Query("SELECT * FROM episodios where linkEpisodio=:arg")
+    suspend fun getEpisodio(arg: String): Episodio
+
 }

@@ -34,4 +34,9 @@ class EpisodioRepository (private val episodioDAO: EpisodioDAO) {
     suspend fun removeByFeed(arg: String){
         episodioDAO.removeByFeed(arg)
     }
+
+    @WorkerThread
+    suspend fun getEpisodio(arg: String): Episodio{
+        return episodioDAO.getEpisodio(arg)
+    }
 }

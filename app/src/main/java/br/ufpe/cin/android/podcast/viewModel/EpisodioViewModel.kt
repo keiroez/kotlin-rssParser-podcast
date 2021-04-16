@@ -29,6 +29,10 @@ class EpisodioViewModel(val repo: EpisodioRepository) : ViewModel() {
     suspend fun removeByFeed(urlFeed: String){
         repo.removeByFeed(urlFeed)
     }
+
+    suspend fun getEpisodio(linkEpisodio: String): Episodio{
+       return repo.getEpisodio(linkEpisodio)
+    }
 }
 
 class EpisodioViewModelFactory( private val repo: EpisodioRepository) : ViewModelProvider.Factory{
