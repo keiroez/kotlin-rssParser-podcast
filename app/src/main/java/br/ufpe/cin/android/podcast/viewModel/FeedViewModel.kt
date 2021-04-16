@@ -1,5 +1,6 @@
 package br.ufpe.cin.android.podcast.viewModel
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,11 +11,7 @@ import kotlinx.coroutines.launch
 import java.lang.IllegalArgumentException
 
 class FeedViewModel(val repo: FeedRepository) : ViewModel() {
-    val feeds = repo.feeds
-
-    fun getFeedComEpisodios(feed: Feed){
-        val feedComEpisodios = repo.getFeedsComEpisodios(feed.urlFeed)
-    }
+    val feeds: LiveData<List<Feed>> = repo.feeds
 
     suspend fun inserir(feed : Feed){
         viewModelScope.launch(Dispatchers.IO) {
@@ -34,9 +31,6 @@ class FeedViewModel(val repo: FeedRepository) : ViewModel() {
         }
     }
 
-//    fun getPorLink(link: String){
-//        repo.getPorLink(link)
-//    }
 }
 
 class FeedViewModelFactory( private val repo: FeedRepository) : ViewModelProvider.Factory{

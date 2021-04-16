@@ -5,6 +5,7 @@ import androidx.room.*
 import br.ufpe.cin.android.podcast.data.vo.Feed
 import br.ufpe.cin.android.podcast.data.vo.FeedComEpisodios
 
+//[ITEM 5] - UTILIZAÇÃO DE SQLITE POR MEIO DO ROOM PARA ARMAZENAMENTO DE DADOS (DAO FEED)
 @Dao
 interface FeedDAO {
 
@@ -23,8 +24,5 @@ interface FeedDAO {
     @Transaction
     @Query("SELECT * FROM feeds WHERE urlFeed = :arg")
     fun getFeedComEpisodios(arg: String): LiveData<List<FeedComEpisodios>>
-
-//    @Query("SELECT * FROM feeds WHERE urlFeed = :arg")
-//    suspend fun getPorLink(arg:String) : Feed
 
 }

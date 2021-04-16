@@ -5,7 +5,7 @@
     <string name="action_download">Download</string>
     <string name="action_play">Escutar</string>
     <string name="action_pause">Pausar</string>
-    <string name="link_inicial">https://jovemnerd.com.br/feed-nerdcast/</string>
+    <string  name="link_inicial">https://jovemnerd.com.br/feed-nerdcast/</string>
     <string name="title_activity_feed">FeedActivity</string>
     <string name="rss_feed">rssfeed</string>
     <string name="item_desc">Descricão</string>

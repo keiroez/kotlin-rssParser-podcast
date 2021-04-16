@@ -21,7 +21,7 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE"></service>
         <service
-            android:name=".services.MusicPlayerBidingService"
+            android:name=".services.MusicPlayerBindingService"
             android:enabled="true"
             android:exported="false" />
 

@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.media.MediaPlayer
+import android.os.Binder
 import android.os.Build
 import android.os.Environment
 import android.os.IBinder
@@ -17,9 +18,10 @@ import br.ufpe.cin.android.services.VERBOSE_NOTIFICATION_CHANNEL_DESCRIPTION
 import br.ufpe.cin.android.services.VERBOSE_NOTIFICATION_CHANNEL_NAME
 import java.io.FileInputStream
 
-class MusicPlayerBidingService: Service() {
+class MusicPlayerBindingService: Service() {
     private lateinit var mPlayer : MediaPlayer
     private var numStart = 0
+    private lateinit var filePath : FileInputStream
 
     override fun onCreate() {
         super.onCreate()
@@ -27,6 +29,7 @@ class MusicPlayerBidingService: Service() {
 //        mPlayer = MediaPlayer.create(this, R.raw.moonlightsonata)
         //A música não vai ficar tocando em loop
 //        mPlayer.isLooping = true
+        mPlayer = MediaPlayer();
 
         createChannel()
 
@@ -52,24 +55,14 @@ class MusicPlayerBidingService: Service() {
         super.onDestroy()
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        TODO("Not yet implemented")
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        numStart++
-        Log.d("MusicPlayerService", "MusicPlayerService está sendo executado agora ($numStart).")
-        Log.d("MusicPlayerService", intent?.getStringExtra("audio").toString())
-
         var audio = intent?.getStringExtra("audio").toString()
-        var filePath = FileInputStream(Environment.getExternalStoragePublicDirectory(
+        filePath = FileInputStream(Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_DOWNLOADS).path+"/"+audio)
-        Log.d("MusicPlayerService", filePath.toString())
-        mPlayer = MediaPlayer();
+        Log.d("MusicPlayerService", "teste")
         mPlayer.setDataSource(filePath.fd);
         mPlayer.prepare();
         mPlayer.start()
-
 
         //Sinaliza o que fazer caso o service seja interrompido pelo sistema
         //START_NOT_STICKY - não é reiniciado automaticamente
@@ -96,16 +89,15 @@ class MusicPlayerBidingService: Service() {
         }
     }
 
-//    override fun onBind(intent: Intent): IBinder {
-//        return musicBinder
-//    }
+    override fun onBind(intent: Intent): IBinder {
+        return musicBinder
+    }
 
-//    private val musicBinder : IBinder = MusicBinder()
-//
-//    inner class MusicBinder : Binder() {
-//        val service : MusicPlayerBindingService
-//            get() = this@MusicPlayerBindingService
-//    }
+    private val musicBinder : IBinder = MusicBinder()
+    inner class MusicBinder : Binder() {
+        val service : MusicPlayerBindingService
+            get() = this@MusicPlayerBindingService
+    }
 
     fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

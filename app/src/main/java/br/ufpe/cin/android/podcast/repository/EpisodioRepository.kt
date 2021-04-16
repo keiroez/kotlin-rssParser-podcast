@@ -7,6 +7,7 @@ import br.ufpe.cin.android.podcast.data.dao.EpisodioDAO
 import br.ufpe.cin.android.podcast.data.vo.Episodio
 
 class EpisodioRepository (private val episodioDAO: EpisodioDAO) {
+    //[ITEM 6] - LISTA DE EPISÓDIOS DO BANCO DE DADOS PARA O RECYCLEVIEW UTILIZAR
     val episodios = episodioDAO.getEpisodios()
 
     @WorkerThread
@@ -27,5 +28,10 @@ class EpisodioRepository (private val episodioDAO: EpisodioDAO) {
     @WorkerThread
     fun getEpisodiosPorFeed(arg: String): LiveData<List<Episodio>>{
         return episodioDAO.getEpisodiosPorFeed(arg)
+    }
+
+    @WorkerThread
+    suspend fun removeByFeed(arg: String){
+        episodioDAO.removeByFeed(arg)
     }
 }

@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -22,6 +21,7 @@ import br.ufpe.cin.android.podcast.viewModel.EpisodioViewModelFactory
 class FeedActivity() : AppCompatActivity() {
     private lateinit var binding : ActivityFeedBinding
     private lateinit var episodioAdapter: EpisodioAdapter
+    //[ITEM 6] - VIEWMODEL UTILIZADO PARA RECYCLEVIEW UTILIZAR BD
     private val episodioViewModel : EpisodioViewModel by viewModels(){
         EpisodioViewModelFactory(
             EpisodioRepository(
@@ -33,17 +33,15 @@ class FeedActivity() : AppCompatActivity() {
         binding = ActivityFeedBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //[ITEM 1] - UTILIZAÇÃO DE RECYCLEVIEW PARA LISTAR ELEMENTOS
         val rvEpisodios = binding.listaEpisodios
         episodioAdapter = EpisodioAdapter(layoutInflater)
-
         rvEpisodios.apply {
             layoutManager = LinearLayoutManager(this@FeedActivity)
             adapter = episodioAdapter
         }
-
-
+        //URL FEED ENVIADO DA ACTIVITY ANTERIOR, PARA UMA CONSULTA DE EPISODIOS POR FEED
         var linkUrl = intent.getStringExtra("url")
-
         episodioViewModel.getEpisodiosPorFeed(linkUrl.toString()).observe(
             this,
             Observer {
@@ -53,7 +51,7 @@ class FeedActivity() : AppCompatActivity() {
 
     }
 
-//    AGUARDA O RETORNO DO DOWNLOAD COMPLETO
+//  [ITEM 8] AGUARDANDO O RETORNO DO DOWNLOAD COMPLETO ATRAVÉS DE BROADCAST
     private val onDownloadComplete = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             Toast.makeText(binding.root.context, "Download finalizado.", Toast.LENGTH_SHORT).show()
@@ -65,7 +63,6 @@ class FeedActivity() : AppCompatActivity() {
         super.onResume()
         registerReceiver(onDownloadComplete, IntentFilter(DownloadService.DOWNLOAD_COMPLETE))
     }
-
     override fun onPause() {
         unregisterReceiver(onDownloadComplete)
         super.onPause()

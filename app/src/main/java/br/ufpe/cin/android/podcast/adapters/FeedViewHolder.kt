@@ -13,7 +13,7 @@ class FeedViewHolder(private val binding: ItemfeedBinding) :
         binding.itemTitle.text = feed.titulo
         binding.itemDescricao.text = feed.descricao
 
-        //Envia a urlFeed pela Intent
+        //AO CLICAR NO CARD DO FEED, ABRE A FEED ACTIVITY COM SEUS EPISÓDIOS
         binding.card.setOnClickListener {
             var it = Intent(binding.root.context, FeedActivity::class.java)
             it.putExtra("url", feed.urlFeed)

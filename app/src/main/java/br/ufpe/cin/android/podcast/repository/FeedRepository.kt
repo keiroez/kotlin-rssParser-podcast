@@ -7,6 +7,7 @@ import br.ufpe.cin.android.podcast.data.dao.FeedDAO
 import br.ufpe.cin.android.podcast.data.vo.Feed
 
 class FeedRepository (private val feedDAO : FeedDAO) {
+    //[ITEM 6] - LISTA DE FEEDS DO BANCO DE DADOS PARA O RECYCLEVIEW UTILIZAR
     val feeds  = feedDAO.getFeeds()
 
     @WorkerThread
@@ -29,7 +30,4 @@ class FeedRepository (private val feedDAO : FeedDAO) {
         feedDAO.getFeedComEpisodios(linkFeed)
     }
 
-//    fun getPorLink(link:String){
-//        feedDAO.getPorLink(link)
-//    }
 }

@@ -10,6 +10,7 @@
             android:dialogMessage="Insira a URL de RSS Feed do seu Podcast"
             android:positiveButtonText="Salvar"
             android:negativeButtonText="Cancelar"
+            
             />
     </PreferenceCategory>
 </PreferenceScreen>

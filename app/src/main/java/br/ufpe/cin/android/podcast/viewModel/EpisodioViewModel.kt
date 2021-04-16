@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import br.ufpe.cin.android.podcast.data.vo.Episodio
 import br.ufpe.cin.android.podcast.repository.EpisodioRepository
-import br.ufpe.cin.android.podcast.repository.FeedRepository
 import java.lang.IllegalArgumentException
 
 class EpisodioViewModel(val repo: EpisodioRepository) : ViewModel() {
@@ -25,6 +24,10 @@ class EpisodioViewModel(val repo: EpisodioRepository) : ViewModel() {
 
     fun getEpisodiosPorFeed(urlFeed: String): LiveData<List<Episodio>> {
         return repo.getEpisodiosPorFeed(urlFeed)
+    }
+
+    suspend fun removeByFeed(urlFeed: String){
+        repo.removeByFeed(urlFeed)
     }
 }
 

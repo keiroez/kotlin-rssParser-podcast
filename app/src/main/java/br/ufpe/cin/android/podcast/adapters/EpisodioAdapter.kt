@@ -13,7 +13,7 @@ class EpisodioAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodioViewHolder {
         val binding = ItemepisodioBinding.inflate(inflater, parent, false)
-        return EpisodioViewHolder(binding)
+        return EpisodioViewHolder(binding, this)
     }
 
     override fun onBindViewHolder(holder: EpisodioViewHolder, position: Int) {
@@ -28,5 +28,4 @@ class EpisodioAdapter(
             return oldItem == newItem
         }
     }
-
 }
